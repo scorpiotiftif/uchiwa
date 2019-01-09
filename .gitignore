@@ -6,6 +6,7 @@
 .DS_Store
 /build
 /captures
+app/release
 
 # Built application files
 *.apk
