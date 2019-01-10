@@ -3,10 +3,12 @@ package fr.francoisgaucher.uchiwae
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.Parcel
+import android.os.Parcelable
 import java.util.*
 
 
-class PieUchiwa(val index: Int, private val numbersPies: Int) {
+class PieUchiwa(val index: Int, private val numbersPies: Int) : Parcelable{
 
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     val paintAnimation = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -27,8 +29,25 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
 
     var endAngle: Float = 0f
     var id: String = ""
+    var padding = 0f
 
     private var currentState = PieUchiwaEnum.OPPENED
+
+    constructor(parcel: Parcel) : this(
+        parcel.readInt(),
+        parcel.readInt()
+    ) {
+        startAngleINIT = parcel.readFloat()
+        sweetAngleINIT = parcel.readFloat()
+        endAngleINIT = parcel.readFloat()
+        startAngle = parcel.readFloat()
+        sweetAngle = parcel.readFloat()
+        startAngleScale = parcel.readFloat()
+        sweetAngleScale = parcel.readFloat()
+        endAngle = parcel.readFloat()
+        id = parcel.readString()
+        padding = parcel.readFloat()
+    }
 
 
     init {
@@ -38,12 +57,12 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
 
     private fun initValues() {
         startAngle =
-                if ((Uchiwa.START_DEGREE + ((Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) * index)) > Uchiwa.MAX_DEGREE) {
-                    ((Uchiwa.START_DEGREE + ((Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) * index)) % Uchiwa.MAX_DEGREE)
+                if ((Uchiwa.START_DEGREE + ((Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) * index) + padding) > Uchiwa.MAX_DEGREE) {
+                    ((Uchiwa.START_DEGREE + ((Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) * index) + padding) % Uchiwa.MAX_DEGREE)
                 } else {
-                    (Uchiwa.START_DEGREE + ((Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) * index))
+                    (Uchiwa.START_DEGREE + ((Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) * index) + padding)
                 }
-        startAngleScale = startAngle - VALUE_TO_ADD
+        startAngleScale = startAngle - (VALUE_TO_ADD / 2)
         if (startAngleScale == 360f) {
             startAngleScale = 0f
         }
@@ -52,7 +71,7 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
         }
         startAngleINIT = startAngle
 
-        sweetAngle = Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies
+        sweetAngle = Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies - padding
         sweetAngleINIT = sweetAngle
         sweetAngleScale = sweetAngle + VALUE_TO_ADD
 
@@ -77,17 +96,17 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
         }
     }
 
-    fun movingUp(endAngle:Float? = null) {
-        if(endAngle != null){
+    fun movingUp(endAngle: Float? = null) {
+        if (endAngle != null) {
             startAngle = endAngle
             this.endAngle = if ((startAngle + sweetAngle) > Uchiwa.MAX_DEGREE) {
                 (startAngle + sweetAngle) % Uchiwa.MAX_DEGREE
             } else {
                 (startAngle + sweetAngle)
             }
-        }else{
+        } else {
             startAngle -= VALUE_TO_ADD
-            if(startAngle < Uchiwa.TOP_DEGREE){
+            if (startAngle < Uchiwa.TOP_DEGREE) {
                 startAngle = Uchiwa.TOP_DEGREE
             }
             this.endAngle = if ((startAngle + sweetAngle) > Uchiwa.MAX_DEGREE) {
@@ -98,18 +117,20 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
         }
     }
 
-    fun movingDown(endAngle:Float? = null) {
-        if(endAngle != null){
-            startAngle = endAngle
+    fun movingDown(endAngle: Float? = null) {
+        if (endAngle != null) {
+            startAngle = endAngle + padding
+
             this.endAngle = if ((startAngle + sweetAngle) > Uchiwa.MAX_DEGREE) {
                 (startAngle + sweetAngle) % Uchiwa.MAX_DEGREE
             } else {
                 (startAngle + sweetAngle)
             }
-        }else{
+        } else {
             startAngle += VALUE_TO_ADD
-            if(startAngle > Uchiwa.START_DEGREE){
-                startAngle = Uchiwa.START_DEGREE
+
+            if (startAngle > Uchiwa.START_DEGREE + padding) {
+                startAngle = Uchiwa.START_DEGREE + padding
             }
 
             this.endAngle = if ((startAngle + sweetAngle) > Uchiwa.MAX_DEGREE) {
@@ -154,8 +175,8 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
     fun opening() {
         currentState = PieUchiwaEnum.OPPENING
         sweetAngle += VALUE_TO_ADD
-        if (sweetAngle >= (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies)) {
-            sweetAngle = (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies)
+        if (sweetAngle >= (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) - padding) {
+            sweetAngle = (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) - padding
             currentState = PieUchiwaEnum.OPPENED
         }
         endAngle = if ((startAngle + sweetAngle) > Uchiwa.MAX_DEGREE) {
@@ -188,22 +209,59 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
         this.newRect.set(newRect)
     }
 
-    fun copyItClosed():PieUchiwa {
-        val pieCopy = PieUchiwa(index,numbersPies)
+    fun updatePadding(newPadding: Float) {
+        padding = newPadding
+        initValues()
+    }
+
+    fun isSweepLessThanNormal(): Boolean = sweetAngle < (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies - padding)
+
+    fun isSweepGreaterThanMin(): Boolean = sweetAngle > MIN_ANGLE_PIE
+
+    fun growUpAngle() {
+        sweetAngle += VALUE_TO_ADD
+        if (sweetAngle > (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies - padding)) {
+            sweetAngle = (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies - padding)
+        }
+
+        endAngle = if ((startAngle + sweetAngle) > Uchiwa.MAX_DEGREE) {
+            (startAngle + sweetAngle) % Uchiwa.MAX_DEGREE
+        } else {
+            (startAngle + sweetAngle)
+        }
+    }
+
+    fun finalizeAngle() {
+        sweetAngle -= VALUE_TO_ADD
+        if (sweetAngle < MIN_ANGLE_PIE) {
+            sweetAngle = MIN_ANGLE_PIE
+        }
+
+        if (sweetAngle <= 0f) {
+            sweetAngle = 0f
+        }
+        endAngle = if ((startAngle + sweetAngle) > Uchiwa.MAX_DEGREE) {
+            (startAngle + sweetAngle) % Uchiwa.MAX_DEGREE
+        } else {
+            (startAngle + sweetAngle)
+        }
+    }
+
+    fun copyItClosed(): PieUchiwa {
+        val pieCopy = PieUchiwa(index, numbersPies)
         pieCopy.id = id
-        pieCopy.rect.set(rect)
-        pieCopy.newRect.set(newRect)
+        pieCopy.updateMeasure(rect, newRect)
+        pieCopy.updatePadding(padding)
         pieCopy.sweetAngle = 0f
         pieCopy.currentState = PieUchiwaEnum.CLOSED
         return pieCopy
     }
 
-    fun copy():PieUchiwa {
-        val pieCopy = PieUchiwa(index,numbersPies)
+    fun copy(): PieUchiwa {
+        val pieCopy = PieUchiwa(index, numbersPies)
         pieCopy.id = id
-        pieCopy.rect.set(rect)
-        pieCopy.newRect.set(newRect)
-        pieCopy.sweetAngle = sweetAngle
+        pieCopy.updateMeasure(rect, newRect)
+        pieCopy.updatePadding(padding)
         pieCopy.currentState = currentState
         return pieCopy
     }
@@ -226,10 +284,37 @@ class PieUchiwa(val index: Int, private val numbersPies: Int) {
         return result
     }
 
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(index)
+        parcel.writeInt(numbersPies)
+        parcel.writeFloat(startAngleINIT)
+        parcel.writeFloat(sweetAngleINIT)
+        parcel.writeFloat(endAngleINIT)
+        parcel.writeFloat(startAngle)
+        parcel.writeFloat(sweetAngle)
+        parcel.writeFloat(startAngleScale)
+        parcel.writeFloat(sweetAngleScale)
+        parcel.writeFloat(endAngle)
+        parcel.writeString(id)
+        parcel.writeFloat(padding)
+    }
 
-    companion object {
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<PieUchiwa> {
         private const val INIT_ALPHA = 190
-        private const val VALUE_TO_ADD = 7
+        private const val VALUE_TO_ADD = 2
+        private const val MIN_ANGLE_PIE = 20f
+
+        override fun createFromParcel(parcel: Parcel): PieUchiwa {
+            return PieUchiwa(parcel)
+        }
+
+        override fun newArray(size: Int): Array<PieUchiwa?> {
+            return arrayOfNulls(size)
+        }
     }
 }
 

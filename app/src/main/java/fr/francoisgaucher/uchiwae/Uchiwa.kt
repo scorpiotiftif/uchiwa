@@ -13,6 +13,7 @@ import android.support.annotation.AttrRes
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import fr.francoisgaucher.uchiwa.R
 
 
 class Uchiwa : View {
@@ -20,15 +21,17 @@ class Uchiwa : View {
     val paint = Paint(ANTI_ALIAS_FLAG)
     val rect = RectF()
     val newRect = RectF()
-    val handlerAnimation: Handler
+    var handlerAnimation: Handler
 
 
-    private val pies: MutableList<PieUchiwa> = mutableListOf()
-    private val piesCopy: MutableList<PieUchiwa> = mutableListOf()
+    private var pies: MutableList<PieUchiwa> = mutableListOf()
+    private var piesCopy: MutableList<PieUchiwa> = mutableListOf()
     private var previusPieSelected: PieUchiwa? = null
     private var pieSelected: PieUchiwa? = null
     private var currentStep = UchiwaEnum.SELECTION_STEP
     private var lastIndicePieGot = 0
+    private var paddingPie: Float = 0f
+    private var forceStopAnimation: Boolean = false
     // ############################################################################
     // ############## DEBUG #######################################################
     var xPoint: Float = 0f
@@ -47,21 +50,33 @@ class Uchiwa : View {
     ) : super(context, attrs, defStyleAttr, 0) {
 
         setWillNotDraw(false)
+        isSaveEnabled = true
+        if (attrs == null) {
+            paddingPie = 0f
+            return
+        }
+
+        val ta = context.obtainStyledAttributes(attrs, R.styleable.Uchiwa)
+        paddingPie = ta.getDimension(R.styleable.Uchiwa_pie_padding, 0f)
+        ta.recycle()
+        updatePadding()
     }
 
     init {
-        pies.add(PieUchiwa(0, 8))
-        pies.add(PieUchiwa(1, 8))
-
-        pies.add(PieUchiwa(2, 8))
-        pies.add(PieUchiwa(3, 8))
-
-        pies.add(PieUchiwa(4, 8))
-        pies.add(PieUchiwa(5, 8))
-
-
-        pies.add(PieUchiwa(6, 8))
-        pies.add(PieUchiwa(7, 8))
+        val numberPies = 8
+        var i = 0
+        pies.add(PieUchiwa(i++, numberPies))
+        pies.add(PieUchiwa(i++, numberPies))
+//
+        pies.add(PieUchiwa(i++, numberPies))
+        pies.add(PieUchiwa(i++, numberPies))
+//
+        pies.add(PieUchiwa(i++, numberPies))
+        pies.add(PieUchiwa(i++, numberPies))
+//
+//
+        pies.add(PieUchiwa(i++, numberPies))
+        pies.add(PieUchiwa(i++, numberPies))
 
         pies.forEach {
             piesCopy.add(it.copy())
@@ -79,44 +94,52 @@ class Uchiwa : View {
                     val isOppenning = it.getBoolean(UchiwaEnum.OPENNING_STEP.name)
                     var isIndiceChanged: Boolean
                     if (isOppenning) {
-                        if (pieSelected!!.startAngle < START_DEGREE && piesCopy.size == 1) {
+                        if (pieSelected!!.startAngle < (START_DEGREE + paddingPie) && piesCopy.size == 1) {
                             pieSelected!!.movingDown()
                             postInvalidate()
                         } else {
-                            do {
-                                isIndiceChanged = false
-                                if (lastIndicePieGot < pies.size && pieSelected != pies[lastIndicePieGot]) {
-                                    if (piesCopy.contains(pies[lastIndicePieGot]).not()) {
-                                        val pieTmp = pies[lastIndicePieGot].copyItClosed()
-                                        piesCopy.add(lastIndicePieGot, pieTmp)
-                                        pieTmp.opening()
-                                        if (pieTmp.index < pieSelected!!.index) {
-                                            pieSelected!!.movingDown(pieTmp.endAngle)
-                                        }
-                                        postInvalidate()
-                                    } else {
-                                        if (piesCopy[lastIndicePieGot].isOpenned()) {
-                                            lastIndicePieGot++
-                                            isIndiceChanged = true
-                                        } else {
-                                            piesCopy[lastIndicePieGot].opening()
-                                            if (piesCopy[lastIndicePieGot].index < pieSelected!!.index) {
-                                                pieSelected!!.movingDown(piesCopy[lastIndicePieGot].endAngle)
+                            if (pieSelected!!.isSweepLessThanNormal()) {
+                                pieSelected!!.growUpAngle()
+                                postInvalidate()
+                            } else {
+                                do {
+                                    isIndiceChanged = false
+                                    if (lastIndicePieGot < pies.size && pieSelected != pies[lastIndicePieGot]) {
+                                        if (piesCopy.contains(pies[lastIndicePieGot]).not()) {
+                                            val pieTmp = pies[lastIndicePieGot].copyItClosed()
+                                            piesCopy.add(lastIndicePieGot, pieTmp)
+                                            pieTmp.opening()
+                                            if (pieTmp.index < pieSelected!!.index) {
+                                                pieSelected!!.movingDown(pieTmp.endAngle)
                                             }
                                             postInvalidate()
+                                        } else {
+                                            if (lastIndicePieGot < piesCopy.size) {
+                                                if (piesCopy[lastIndicePieGot].isOpenned()) {
+                                                    lastIndicePieGot++
+                                                    isIndiceChanged = true
+                                                } else {
+                                                    piesCopy[lastIndicePieGot].opening()
+                                                    if (piesCopy[lastIndicePieGot].index < pieSelected!!.index) {
+                                                        pieSelected!!.movingDown(piesCopy[lastIndicePieGot].endAngle)
+                                                    }
+                                                    postInvalidate()
+                                                }
+                                            }
+
+                                        }
+                                    } else {
+                                        if (lastIndicePieGot >= pies.size) {
+                                            currentStep = UchiwaEnum.SELECTION_STEP
+                                            lastIndicePieGot = 0
+                                            postInvalidate()
+                                        } else {
+                                            lastIndicePieGot++
+                                            isIndiceChanged = true
                                         }
                                     }
-                                } else {
-                                    if (lastIndicePieGot >= pies.size) {
-                                        currentStep = UchiwaEnum.SELECTION_STEP
-                                        lastIndicePieGot = 0
-                                        postInvalidate()
-                                    } else {
-                                        lastIndicePieGot++
-                                        isIndiceChanged = true
-                                    }
-                                }
-                            } while (isIndiceChanged)
+                                } while (isIndiceChanged)
+                            }
                         }
                     }
                     // FERMETURE DE L'EVANTAIL
@@ -149,7 +172,14 @@ class Uchiwa : View {
                                         if (pieSelected!!.startAngle > TOP_DEGREE) {
                                             pieSelected!!.movingUp()
                                         } else {
-                                            currentStep = UchiwaEnum.CLOSED_STEP
+                                            // DERNIERE ANIMATION
+                                            // SI LA PIE CHART EST PLUS GRANDE QUE LA VALEUR MIN CONFIG DANS PIEUCHIWA
+                                            // ALORS ON DIMINUE L'ANGLE DU PIE
+                                            if (pieSelected!!.isSweepGreaterThanMin()) {
+                                                pieSelected!!.finalizeAngle()
+                                            } else {
+                                                currentStep = UchiwaEnum.CLOSED_STEP
+                                            }
                                         }
 
                                         postInvalidate()
@@ -168,8 +198,19 @@ class Uchiwa : View {
         }
     }
 
+    private fun updatePadding() {
+        pies.forEach {
+            it.updatePadding(paddingPie)
+        }
+        postInvalidate()
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        updateMeasure()
+    }
+
+    private fun updateMeasure() {
         val maxWidth = measuredWidth.toFloat()
         val maxHeight = measuredHeight.toFloat()
 
@@ -209,11 +250,18 @@ class Uchiwa : View {
         newRect.set(rect)
         newRect.inset(-20f, -20f)
 
-        pies.forEachIndexed { index, pieUchiwa ->
+        pies.forEach { pieUchiwa ->
             run {
                 pieUchiwa.updateMeasure(rect, newRect)
-                piesCopy.set(index, pieUchiwa.copy())
+                val index = piesCopy.indexOfFirst { pie -> pie.index == pieUchiwa.index }
+                if (index >= 0) {
+                    piesCopy[index] = pieUchiwa.copy()
+                }
             }
+        }
+
+        pieSelected?.let {
+            it.updateMeasure(rect, newRect)
         }
     }
 
@@ -222,7 +270,8 @@ class Uchiwa : View {
             && currentStep != UchiwaEnum.OPENNING_STEP
         ) {
             if (currentStep == UchiwaEnum.CLOSED_STEP ||
-                currentStep == UchiwaEnum.SELECTING_CLOSED_STEP) {
+                currentStep == UchiwaEnum.SELECTING_CLOSED_STEP
+            ) {
                 when (event?.action) {
                     MotionEvent.ACTION_DOWN -> {
                         val relX = event.x
@@ -329,8 +378,8 @@ class Uchiwa : View {
 
     private fun runClosingAnimation() {
         Thread(Runnable {
-            while (currentStep == UchiwaEnum.CLOSING_STEP) {
-                Thread.sleep(50)
+            while (forceStopAnimation.not() && currentStep == UchiwaEnum.CLOSING_STEP) {
+                Thread.sleep(TIME_REFRESH)
                 val message = Message()
                 message.data.putBoolean(UchiwaEnum.OPENNING_STEP.name, false)
                 handlerAnimation.dispatchMessage(message)
@@ -340,8 +389,8 @@ class Uchiwa : View {
 
     private fun runOpeningAnimation() {
         Thread(Runnable {
-            while (currentStep == UchiwaEnum.OPENNING_STEP) {
-                Thread.sleep(50)
+            while (forceStopAnimation.not() && currentStep == UchiwaEnum.OPENNING_STEP) {
+                Thread.sleep(TIME_REFRESH)
                 val message = Message()
                 message.data.putBoolean(UchiwaEnum.OPENNING_STEP.name, true)
                 handlerAnimation.dispatchMessage(message)
@@ -357,20 +406,20 @@ class Uchiwa : View {
             // SI LA PORTION QU'A SELECTIONNÉE L'UTILISATEUR EST LA MEME QUE L'ACTUELLE
             // PAS BESOIN DE FAIRE QUOI QUE CE SOIT
             if (this.pieSelected == pieSelected) {
-                this.previusPieSelected = this.pieSelected
+                this.previusPieSelected = this.pieSelected!!.copy()
                 return
             }
             // DANS LE CAS CONTRAIRE, SI ACTUELLEMENT NOUS AVONS UNE PORTION DE SELECTIONNÉE
             // ALORS NOUS DEVONS LA DESELECTIONNER "unselect" ET SELECTIONNER "select" LA NOUVELLE
             if (this.pieSelected != null) {
-                previusPieSelected = this.pieSelected
+                previusPieSelected = this.pieSelected!!.copy()
                 previusPieSelected!!.unselected()
-                this.pieSelected = pieSelected
+                this.pieSelected = pieSelected.copy()
                 this.pieSelected!!.selecting()
             } else {
                 // SI ACTUELLEMENT NOUS N'AVONS PAS DE PORTION SELECTIONNÉE
                 // ALORS ON PLACE CETTE NOUVELLE PORTION ET NOUS LA SELECTIONNONS "select"
-                this.pieSelected = pieSelected
+                this.pieSelected = pieSelected.copy()
                 this.pieSelected!!.selecting()
             }
         } else {
@@ -380,7 +429,7 @@ class Uchiwa : View {
             // ET RAZ LES DONNEES
             if (this.pieSelected != null) {
                 this.pieSelected!!.unselected()
-                this.previusPieSelected = this.pieSelected
+                this.previusPieSelected = this.pieSelected!!.copy()
                 this.pieSelected = null
             } else {
                 // SOIT RIEN DE PARTICULIER
@@ -468,6 +517,13 @@ class Uchiwa : View {
         ) {
             return (angle >= pieSelected.startAngle && angle <= Uchiwa.MAX_DEGREE) ||
                     (angle >= 0.0f && angle <= pieSelected.endAngle)
+        }
+        // DANS LE CAS OU LA PIE UCHIWA COMMENCE SON ANGLE AVANT L'ANGLE 0 (EXEMPLE 355)
+        // ET QUE SON ANGLE DE FIN CE TROUVE SOUS CE MEME ANGLE (EXEMPLE 3)
+        // ON TRICHE UN PEU ON RAJOUTE LA VALEUR DE L'ANGLE DE FIN A 360
+        // POUR AVOIR EXEMPLE 363
+        else if (pieSelected.sweetAngle > QUART_ANGLE && (angle >= pieSelected.startAngle && angle <= (MAX_DEGREE + pieSelected.endAngle) && polarradius < radius)) {
+            true
         } else {
             false
         }
@@ -491,7 +547,7 @@ class Uchiwa : View {
             UchiwaEnum.CLOSED_STEP -> {
                 drawUchiwaClosed(canvas)
             }
-            UchiwaEnum.SELECTING_CLOSED_STEP ->{
+            UchiwaEnum.SELECTING_CLOSED_STEP -> {
                 drawUchiwaClosed(canvas)
             }
             UchiwaEnum.SELECTING_STEP -> {
@@ -557,23 +613,107 @@ class Uchiwa : View {
                 canvas?.drawArc(pieTmp.newRect, pieTmp.startAngleScale, pieTmp.sweetAngleScale, true, borderPaint)
             }
         }
-
     }
 
     private fun drawCircleHelpSelection(canvas: Canvas?) {
         if (currentStep == UchiwaEnum.SELECTING_STEP ||
-            currentStep == UchiwaEnum.SELECTING_CLOSED_STEP    ) {
+            currentStep == UchiwaEnum.SELECTING_CLOSED_STEP
+        ) {
             canvas?.drawArc(xPoint - 10, yPoint - 10, xPoint + 10, yPoint + 10, 0f, 360f, false, paintDebug)
             canvas?.drawCircle(xPoint, yPoint, 1f, paintDebug)
         }
     }
 
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        if (visibility == View.VISIBLE) //onResume called
+        {
+            if (currentStep == UchiwaEnum.CLOSING_STEP) {
+                forceStopAnimation = false
+            runClosingAnimation()
+            } else if (currentStep == UchiwaEnum.OPENNING_STEP) {
+                forceStopAnimation = false
+
+                runOpeningAnimation()
+            }
+        } else // onPause() called
+        {
+            forceStopAnimation = true
+        }
+
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        if (hasWindowFocus) //onresume() called
+        {
+
+            if (currentStep == UchiwaEnum.CLOSING_STEP) {
+                forceStopAnimation = false
+            runClosingAnimation()
+            } else if (currentStep == UchiwaEnum.OPENNING_STEP) {
+                forceStopAnimation = false
+            runOpeningAnimation()
+            }
+        }
+        else // onPause() called
+        {
+            forceStopAnimation = true
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+
+    }
+
     override fun onSaveInstanceState(): Parcelable? {
-        return super.onSaveInstanceState()
+        forceStopAnimation = true
+        val superState = super.onSaveInstanceState()
+        val ss = SaveStateUchiwa(superState)
+        ss.paddingPie = paddingPie
+        ss.pieSelected = pieSelected
+        ss.pies = pies
+        ss.piesCopy = piesCopy
+        ss.uchiwaEnum = currentStep
+        ss.lastIndicePieGot = lastIndicePieGot
+//        ss.handler = handlerAnimation
+        return ss
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
-        super.onRestoreInstanceState(state)
+        val ss = state as SaveStateUchiwa
+        super.onRestoreInstanceState(ss.getSuperState())
+        ss.pies?.let {
+            pies = it.toMutableList()
+        }
+        ss.piesCopy?.let {
+            piesCopy = it.toMutableList()
+        }
+        updateMeasure()
+        ss.pieSelected?.let {
+            pieSelected = it
+            pieSelected!!.updateMeasure(rect, newRect)
+        }
+        ss.paddingPie?.let {
+            paddingPie = it
+        }
+        ss.lastIndicePieGot?.let {
+            lastIndicePieGot = it
+        }
+
+//        ss.handler?.let {
+//            handlerAnimation = it
+//        }
+        ss.uchiwaEnum?.let {
+            currentStep = it
+            if (currentStep == UchiwaEnum.CLOSING_STEP) {
+                runClosingAnimation()
+            } else if (currentStep == UchiwaEnum.OPENNING_STEP) {
+                runOpeningAnimation()
+            }
+        }
+
     }
 
     companion object {
@@ -581,6 +721,9 @@ class Uchiwa : View {
         private const val MAX_SIZE_CAMEMBERT = 0.90f
 
         private const val POSITION_HELP_CIRCLE = 130
+        private const val TIME_REFRESH = 20L
+
+        private const val QUART_ANGLE = 90f
 
         const val UCHIWA_ANGLE: Float = 30f
         private const val ALF_DEGREE: Float = 180f
@@ -595,7 +738,7 @@ class Uchiwa : View {
     }
 }
 
-private enum class UchiwaEnum {
+enum class UchiwaEnum {
     SELECTION_STEP, // L'evantail propose son panel d'option
     OPENNING_STEP, // l'evantail est en train de s'ouvrir (CLOSED_STEP -> SELECTION_STEP)
     CLOSING_STEP, // l'evantail est en train de se fermer (SELECTION_STEP -> CLOSED_STEP)
