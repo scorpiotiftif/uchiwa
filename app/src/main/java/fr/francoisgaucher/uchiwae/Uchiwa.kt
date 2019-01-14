@@ -581,7 +581,7 @@ class Uchiwa : View {
             canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
             pie.icone?.let {
 //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+                canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), pie.paintIcone)
             }
         }
     }
@@ -592,7 +592,7 @@ class Uchiwa : View {
                 canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
                 pie.icone?.let {
                     //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), pie.paintIcone)
                 }
             }
         }
@@ -603,7 +603,7 @@ class Uchiwa : View {
             }
             pieTmp.icone?.let {
                 //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), pieTmp.paintIcone)
             }
         }
     }
@@ -614,7 +614,7 @@ class Uchiwa : View {
                 canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
                 pie.icone?.let {
                     //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), pie.paintIcone)
                 }
             }
         }
@@ -625,7 +625,7 @@ class Uchiwa : View {
             }
             pieTmp.icone?.let {
                 //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), pieTmp.paintIcone)
             }
         }
     }
@@ -638,7 +638,7 @@ class Uchiwa : View {
             }
             pieTmp.icone?.let {
                 //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), pieTmp.paintIcone)
             }
         }
     }
@@ -649,7 +649,7 @@ class Uchiwa : View {
                 canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
                 pie.icone?.let {
                     //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), pie.paintIcone)
                 }
             }
         }
@@ -660,7 +660,7 @@ class Uchiwa : View {
             }
             pieTmp.icone?.let {
                 //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
-                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), pieTmp.paintIcone)
             }
         }
     }

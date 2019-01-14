@@ -12,6 +12,7 @@ import java.util.*
 class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap? = null) : Parcelable {
 
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    val paintIcone = Paint(Paint.ANTI_ALIAS_FLAG)
     val paintAnimation = Paint(Paint.ANTI_ALIAS_FLAG)
     var paintSelected: Paint? = null
 
@@ -107,6 +108,10 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
             color = Color.WHITE
             style = Paint.Style.STROKE
         }
+
+        paintIcone.apply {
+            alpha = 255
+        }
     }
 
     private fun initValues() {
@@ -135,6 +140,22 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
         }
     }
 
+    private fun scaleDownAndVisibilityIcone(){
+        if((paintIcone.alpha - (10 * (sweetAngleINIT / VALUE_TO_ADD).toInt())) >= 0){
+            paintIcone.alpha -= (10 * (sweetAngleINIT / VALUE_TO_ADD).toInt())
+        }else{
+            paintIcone.alpha = 0
+        }
+    }
+
+    private fun scaleUpAndVisibilityIcone(){
+        if((paintIcone.alpha + (10* (sweetAngleINIT / VALUE_TO_ADD).toInt())) <= 255){
+            paintIcone.alpha += (10 * (sweetAngleINIT / VALUE_TO_ADD).toInt())
+        }else{
+            paintIcone.alpha = 255
+        }
+    }
+
     private fun calculateMiddleAngle() {
         if (startAngle >= Uchiwa.TOP_DEGREE &&
             startAngle <= 360 &&
@@ -157,36 +178,8 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
 
     private fun calculateCenterPie() {
         val radMiddleAngle = Math.toRadians(middleAngle.toDouble())
-        var xCenter = rect.centerX() + rect.width().div(3) * Math.cos(radMiddleAngle)
-        var yCenter = rect.centerY() + rect.width().div(3) * Math.sin(radMiddleAngle)
-
-        if (yCenter < 0) {
-//            yCenter *= -1
-//            yCenter += rect.bottom / 2
-        } else {
-//            yCenter += rect.height().div(2) + rect.top
-        }
-
-
-
-        if (rect.width().div(8) < distanceBetweenStartAndEndAngle) {
-//            xCenter -= rect.width().div(8)
-//            if (startAngle >= Uchiwa.TOP_DEGREE && startAngle <= Uchiwa.MAX_DEGREE &&
-//                endAngle <= Uchiwa.BOTTOM_DEGREE && endAngle > 0
-//            ) {
-//            } else {
-//                yCenter -= rect.width().div(8)
-//            }
-        } else {
-//            xCenter -= distanceBetweenStartAndEndAngle.div(8)
-//            if (startAngle >= Uchiwa.TOP_DEGREE && startAngle <= Uchiwa.MAX_DEGREE &&
-//                endAngle <= Uchiwa.BOTTOM_DEGREE && endAngle >= 0
-//            ) {
-//
-//            } else {
-//                yCenter -= distanceBetweenStartAndEndAngle.div(8)
-//            }
-        }
+        val xCenter = rect.centerX() + rect.width().div(3) * Math.cos(radMiddleAngle)
+        val yCenter = rect.centerY() + rect.width().div(3) * Math.sin(radMiddleAngle)
 
         centerRect.set(
             (xCenter).toFloat(),
@@ -194,7 +187,6 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
             (xCenter).toFloat(),
             (yCenter).toFloat()
         )
-
     }
 
     private fun calculateDistanceBetweenStartAndEndAngle() {
@@ -245,7 +237,7 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
     fun closing() {
         currentState = PieUchiwaEnum.CLOSING
         sweetAngle -= VALUE_TO_ADD
-
+        scaleDownAndVisibilityIcone()
         if (sweetAngle <= 0f) {
             sweetAngle = 0f
             currentState = PieUchiwaEnum.CLOSED
@@ -255,6 +247,7 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
     fun opening() {
         currentState = PieUchiwaEnum.OPPENING
         sweetAngle += VALUE_TO_ADD
+        scaleUpAndVisibilityIcone()
         if (sweetAngle >= (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) - padding) {
             sweetAngle = (Uchiwa.UCHIWA_FINAL_DEGREE / numbersPies) - padding
             currentState = PieUchiwaEnum.OPPENED
