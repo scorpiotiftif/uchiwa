@@ -1,15 +1,16 @@
 package fr.francoisgaucher.uchiwae
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.graphics.Paint.ANTI_ALIAS_FLAG
-import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Message
 import android.os.Parcelable
 import android.support.annotation.AttrRes
+import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -63,20 +64,22 @@ class Uchiwa : View {
     }
 
     init {
-        val numberPies = 8
+        val numberPies = 4
         var i = 0
-        pies.add(PieUchiwa(i++, numberPies))
-        pies.add(PieUchiwa(i++, numberPies))
+        val bitmap = drawableToBitmap(ContextCompat.getDrawable(context, R.drawable.ic_all_inclusive_black_24dp)!!)
+
+        pies.add(PieUchiwa(i++, numberPies, bitmap))
+        pies.add(PieUchiwa(i++, numberPies, bitmap))
 //
-        pies.add(PieUchiwa(i++, numberPies))
-        pies.add(PieUchiwa(i++, numberPies))
+        pies.add(PieUchiwa(i++, numberPies, bitmap))
+        pies.add(PieUchiwa(i++, numberPies, bitmap))
+////
+//        pies.add(PieUchiwa(i++, numberPies, bitmap))
+//        pies.add(PieUchiwa(i++, numberPies, bitmap))
 //
-        pies.add(PieUchiwa(i++, numberPies))
-        pies.add(PieUchiwa(i++, numberPies))
 //
-//
-        pies.add(PieUchiwa(i++, numberPies))
-        pies.add(PieUchiwa(i++, numberPies))
+//        pies.add(PieUchiwa(i++, numberPies, bitmap))
+//        pies.add(PieUchiwa(i++, numberPies, bitmap))
 
         pies.forEach {
             piesCopy.add(it.copy())
@@ -88,7 +91,8 @@ class Uchiwa : View {
         paintDebug.strokeWidth = 3f
         // ############################################################################
 
-        handlerAnimation = object : Handler() {
+        handlerAnimation = @SuppressLint("HandlerLeak")
+        object : Handler() {
             override fun handleMessage(msg: Message?) {
                 msg?.data?.let {
                     val isOppenning = it.getBoolean(UchiwaEnum.OPENNING_STEP.name)
@@ -196,6 +200,20 @@ class Uchiwa : View {
                 }
             }
         }
+    }
+
+    fun drawableToBitmap(drawable: Drawable): Bitmap {
+
+        if (drawable is BitmapDrawable) {
+            return drawable.bitmap
+        }
+
+        val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+
+        return bitmap
     }
 
     private fun updatePadding() {
@@ -561,6 +579,10 @@ class Uchiwa : View {
     private fun drawUchiwaSelection(canvas: Canvas?) {
         for (pie in pies) {
             canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
+            pie.icone?.let {
+//                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+            }
         }
     }
 
@@ -568,12 +590,20 @@ class Uchiwa : View {
         for (pie in piesCopy) {
             if (pie != pieSelected) {
                 canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
+                pie.icone?.let {
+                    //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+                }
             }
         }
         pieSelected?.let { pieTmp ->
             canvas?.drawArc(pieTmp.rect, pieTmp.startAngle, pieTmp.sweetAngle, true, pieTmp.paint)
             pieTmp.paintAnimation?.let { borderPaint ->
                 canvas?.drawArc(pieTmp.rect, pieTmp.startAngle, pieTmp.sweetAngle, true, borderPaint)
+            }
+            pieTmp.icone?.let {
+                //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
             }
         }
     }
@@ -582,12 +612,20 @@ class Uchiwa : View {
         for (pie in piesCopy) {
             if (pie != pieSelected) {
                 canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
+                pie.icone?.let {
+                    //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+                }
             }
         }
         pieSelected?.let { pieTmp ->
             canvas?.drawArc(pieTmp.rect, pieTmp.startAngle, pieTmp.sweetAngle, true, pieTmp.paint)
             pieTmp.paintAnimation?.let { borderPaint ->
                 canvas?.drawArc(pieTmp.rect, pieTmp.startAngle, pieTmp.sweetAngle, true, borderPaint)
+            }
+            pieTmp.icone?.let {
+                //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
             }
         }
     }
@@ -598,6 +636,10 @@ class Uchiwa : View {
             pieTmp.paintAnimation?.let { borderPaint ->
                 canvas?.drawArc(pieTmp.rect, pieTmp.startAngle, pieTmp.sweetAngle, true, borderPaint)
             }
+            pieTmp.icone?.let {
+                //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
+            }
         }
     }
 
@@ -605,12 +647,20 @@ class Uchiwa : View {
         for (pie in pies) {
             if (pie != pieSelected) {
                 canvas?.drawArc(pie.rect, pie.startAngle, pie.sweetAngle, true, pie.paint)
+                pie.icone?.let {
+                    //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                    canvas?.drawBitmap(it, pie.centerRect.left - it.width.div(2), pie.centerRect.top - it.height.div(2), null)
+                }
             }
         }
         pieSelected?.let { pieTmp ->
             canvas?.drawArc(pieTmp.newRect, pieTmp.startAngleScale, pieTmp.sweetAngleScale, true, pieTmp.paint)
             pieTmp.paintSelected?.let { borderPaint ->
                 canvas?.drawArc(pieTmp.newRect, pieTmp.startAngleScale, pieTmp.sweetAngleScale, true, borderPaint)
+            }
+            pieTmp.icone?.let {
+                //                canvas?.drawCircle(pie.centerRect.left, pie.centerRect.top, 10f, paintDebug)
+                canvas?.drawBitmap(it, pieTmp.centerRect.left - it.width.div(2), pieTmp.centerRect.top - it.height.div(2), null)
             }
         }
     }
@@ -630,7 +680,7 @@ class Uchiwa : View {
         {
             if (currentStep == UchiwaEnum.CLOSING_STEP) {
                 forceStopAnimation = false
-            runClosingAnimation()
+                runClosingAnimation()
             } else if (currentStep == UchiwaEnum.OPENNING_STEP) {
                 forceStopAnimation = false
 
@@ -638,7 +688,11 @@ class Uchiwa : View {
             }
         } else // onPause() called
         {
-            forceStopAnimation = true
+            if (currentStep == UchiwaEnum.CLOSING_STEP ||
+                currentStep == UchiwaEnum.OPENNING_STEP
+            ) {
+                forceStopAnimation = true
+            }
         }
 
     }
@@ -650,15 +704,18 @@ class Uchiwa : View {
 
             if (currentStep == UchiwaEnum.CLOSING_STEP) {
                 forceStopAnimation = false
-            runClosingAnimation()
+                runClosingAnimation()
             } else if (currentStep == UchiwaEnum.OPENNING_STEP) {
                 forceStopAnimation = false
-            runOpeningAnimation()
+                runOpeningAnimation()
             }
-        }
-        else // onPause() called
+        } else // onPause() called
         {
-            forceStopAnimation = true
+            if (currentStep == UchiwaEnum.CLOSING_STEP ||
+                currentStep == UchiwaEnum.OPENNING_STEP
+            ) {
+                forceStopAnimation = true
+            }
         }
     }
 
@@ -668,7 +725,6 @@ class Uchiwa : View {
     }
 
     override fun onSaveInstanceState(): Parcelable? {
-        forceStopAnimation = true
         val superState = super.onSaveInstanceState()
         val ss = SaveStateUchiwa(superState)
         ss.paddingPie = paddingPie
@@ -718,19 +774,19 @@ class Uchiwa : View {
 
     companion object {
         // PERCENT
-        private const val MAX_SIZE_CAMEMBERT = 0.90f
+        private const val MAX_SIZE_CAMEMBERT = 1f
 
         private const val POSITION_HELP_CIRCLE = 130
-        private const val TIME_REFRESH = 20L
+        private const val TIME_REFRESH =15L
 
         private const val QUART_ANGLE = 90f
 
         const val UCHIWA_ANGLE: Float = 30f
-        private const val ALF_DEGREE: Float = 180f
+        const val ALF_DEGREE: Float = 180f
         const val UCHIWA_RADIUS: Float = UCHIWA_ANGLE / 2
         const val TOP_DEGREE: Float = 270f
         const val MAX_DEGREE: Float = 360f
-        private const val BOTTOM_DEGREE: Float = 90f
+        const val BOTTOM_DEGREE: Float = 90f
         const val START_DEGREE: Float = TOP_DEGREE + UCHIWA_RADIUS
         const val LAST_DEGREE: Float = BOTTOM_DEGREE - UCHIWA_RADIUS
 
