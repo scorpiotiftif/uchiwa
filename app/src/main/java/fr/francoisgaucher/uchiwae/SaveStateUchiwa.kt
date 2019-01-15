@@ -1,6 +1,5 @@
 package fr.francoisgaucher.uchiwae
 
-import android.os.Handler
 import android.os.Parcel
 import android.os.Parcelable
 import android.view.View
@@ -12,7 +11,7 @@ class SaveStateUchiwa : View.BaseSavedState {
     var paddingPie: Float? = null
     var uchiwaEnum: UchiwaEnum? = null
     var lastIndicePieGot: Int? = null
-    var handler: Handler? = null
+    var forceStopAnimation: Boolean? = null
 
     constructor(superState: Parcelable?) : super(superState) {
 

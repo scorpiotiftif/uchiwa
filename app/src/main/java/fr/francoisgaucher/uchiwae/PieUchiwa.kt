@@ -27,16 +27,16 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
 
     var startAngle: Float = 0f
         set(value) {
-            if(value > Uchiwa.MAX_DEGREE){
+            if (value > Uchiwa.MAX_DEGREE) {
                 field = value % Uchiwa.MAX_DEGREE
-            }else {
+            } else {
                 field = value
             }
             if (field == 360f) {
                 field = 0f
             }
             startAngleScale = field - (VALUE_TO_ADD / 2)
-            if(startAngleScale < 0){
+            if (startAngleScale < 0) {
                 startAngleScale = Uchiwa.MAX_DEGREE + startAngleScale
             }
             if (startAngleScale == 360f) {
@@ -50,7 +50,7 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
         set(value) {
             field = value
             sweetAngleScale = field + VALUE_TO_ADD
-            if(sweetAngleScale > Uchiwa.MAX_DEGREE){
+            if (sweetAngleScale > Uchiwa.MAX_DEGREE) {
                 sweetAngleScale %= Uchiwa.MAX_DEGREE
             }
             updateEndAngle()
@@ -76,20 +76,23 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
 
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
-        parcel.readInt()
+        parcel.readInt(),
+        parcel.readParcelable(Bitmap::class.java.classLoader)
     ) {
+        centerRect = parcel.readParcelable(RectF::class.java.classLoader)
+        startAngle = parcel.readFloat()
+        sweetAngle = parcel.readFloat()
         startAngleINIT = parcel.readFloat()
         sweetAngleINIT = parcel.readFloat()
         endAngleINIT = parcel.readFloat()
-        startAngle = parcel.readFloat()
-        sweetAngle = parcel.readFloat()
         startAngleScale = parcel.readFloat()
         sweetAngleScale = parcel.readFloat()
         endAngle = parcel.readFloat()
+        distanceBetweenStartAndEndAngle = parcel.readFloat()
+        middleAngle = parcel.readFloat()
         id = parcel.readString()
         padding = parcel.readFloat()
     }
-
 
     init {
         id = UUID.randomUUID().toString() + " / INDEX = $index"
@@ -140,18 +143,18 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
         }
     }
 
-    private fun scaleDownAndVisibilityIcone(){
-        if((paintIcone.alpha - (10 * (sweetAngleINIT / VALUE_TO_ADD).toInt())) >= 0){
-            paintIcone.alpha -= (10 * (sweetAngleINIT / VALUE_TO_ADD).toInt())
-        }else{
+    private fun scaleDownAndVisibilityIcone() {
+        if ((paintIcone.alpha - (VALUE_TO_ADD * (sweetAngleINIT / VALUE_TO_ADD).toInt())) >= 0) {
+            paintIcone.alpha -= (VALUE_TO_ADD * (sweetAngleINIT / VALUE_TO_ADD).toInt())
+        } else {
             paintIcone.alpha = 0
         }
     }
 
-    private fun scaleUpAndVisibilityIcone(){
-        if((paintIcone.alpha + (10* (sweetAngleINIT / VALUE_TO_ADD).toInt())) <= 255){
-            paintIcone.alpha += (10 * (sweetAngleINIT / VALUE_TO_ADD).toInt())
-        }else{
+    private fun scaleUpAndVisibilityIcone() {
+        if ((paintIcone.alpha + (VALUE_TO_ADD * (sweetAngleINIT / VALUE_TO_ADD).toInt())) <= 255) {
+            paintIcone.alpha += (VALUE_TO_ADD * (sweetAngleINIT / VALUE_TO_ADD).toInt())
+        } else {
             paintIcone.alpha = 255
         }
     }
@@ -167,7 +170,7 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
         } else {
             middleAngle = (startAngle + ((endAngle - startAngle).div(2)))
         }
-        if(middleAngle > Uchiwa.ALF_DEGREE){
+        if (middleAngle > Uchiwa.ALF_DEGREE) {
             var newAngleConverted = middleAngle % Uchiwa.ALF_DEGREE
             middleAngle = (Uchiwa.ALF_DEGREE - newAngleConverted) * -1
         }
@@ -307,23 +310,27 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
     fun copyItClosed(): PieUchiwa {
         val pieCopy = PieUchiwa(index, numbersPies)
         pieCopy.id = id
-        pieCopy.updateMeasure(rect, newRect)
         pieCopy.centerRect = centerRect
+        pieCopy.updateMeasure(rect, newRect)
         pieCopy.updatePadding(padding)
         pieCopy.sweetAngle = 0f
         pieCopy.currentState = PieUchiwaEnum.CLOSED
         pieCopy.icone = icone
+        pieCopy.distanceBetweenStartAndEndAngle = distanceBetweenStartAndEndAngle
+        pieCopy.middleAngle = middleAngle
         return pieCopy
     }
 
     fun copy(): PieUchiwa {
         val pieCopy = PieUchiwa(index, numbersPies)
         pieCopy.id = id
-        pieCopy.updateMeasure(rect, newRect)
         pieCopy.centerRect = centerRect
+        pieCopy.updateMeasure(rect, newRect)
         pieCopy.updatePadding(padding)
         pieCopy.currentState = currentState
         pieCopy.icone = icone
+        pieCopy.distanceBetweenStartAndEndAngle = distanceBetweenStartAndEndAngle
+        pieCopy.middleAngle = middleAngle
         return pieCopy
     }
 
@@ -348,17 +355,20 @@ class PieUchiwa(val index: Int, private val numbersPies: Int, var icone: Bitmap?
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(index)
         parcel.writeInt(numbersPies)
+        parcel.writeParcelable(icone, flags)
+        parcel.writeParcelable(centerRect, flags)
+        parcel.writeFloat(startAngle)
+        parcel.writeFloat(sweetAngle)
         parcel.writeFloat(startAngleINIT)
         parcel.writeFloat(sweetAngleINIT)
         parcel.writeFloat(endAngleINIT)
-        parcel.writeFloat(startAngle)
-        parcel.writeFloat(sweetAngle)
         parcel.writeFloat(startAngleScale)
         parcel.writeFloat(sweetAngleScale)
         parcel.writeFloat(endAngle)
+        parcel.writeFloat(distanceBetweenStartAndEndAngle)
+        parcel.writeFloat(middleAngle)
         parcel.writeString(id)
         parcel.writeFloat(padding)
-
     }
 
     override fun describeContents(): Int {
